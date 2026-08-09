@@ -31,7 +31,8 @@
       <div class="label">Today's totals</div>
       <div class="rows">
         <div><span class="label">Sales</span><b id="totSales">RM 0.00</b></div>
-        <div><span class="label">Cost</span><b id="totCost">RM 0.00</b></div>
+        <div><span class="label">Platform Fee</span><b id="totFee">RM 0.00</b></div>
+        <div><span class="label">Product Cost</span><b id="totCost">RM 0.00</b></div>
         <div><span class="label">Profit</span><b id="totProfit">RM 0.00</b></div>
       </div>
     </div>
@@ -59,18 +60,21 @@
         <button id="nextMonth">›</button>
       </div>
       <div class="hint" id="monthDaysCount"></div>
+      <div class="table-scroll">
       <table class="summary">
-        <thead><tr><th>Channel</th><th>Sales</th><th>Cost</th><th>Profit</th></tr></thead>
+        <thead><tr><th>Channel</th><th>Sales</th><th>Fee</th><th>Cost</th><th>Profit</th></tr></thead>
         <tbody id="monthTableBody"></tbody>
         <tfoot>
           <tr>
             <td>Total</td>
             <td id="monthFootSales">0.00</td>
+            <td id="monthFootFee">0.00</td>
             <td id="monthFootCost">0.00</td>
             <td id="monthFootProfit">0.00</td>
           </tr>
         </tfoot>
       </table>
+      </div>
     </div>
   </section>
 
