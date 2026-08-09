@@ -16,7 +16,7 @@ const LS_SHA      = 'st_sha_v1';
 const LS_PENDING  = 'st_pending_v1';
 
 let settings = loadJSON(LS_SETTINGS, null);
-let records  = loadJSON(LS_RECORDS, {});     // { "2026-08-09": { tiktok: {sales,cost,profit}, ... } }
+let records  = normalizeRecords(loadJSON(LS_RECORDS, {}));  // { "2026-08-09": { tiktok: {sales,platformFee,productCost,profit}, ... } }
 let fileSha  = loadJSON(LS_SHA, null);
 let pending  = loadJSON(LS_PENDING, []);     // list of date strings with unsynced local changes
 let currentEntryDate = todayStr();
@@ -36,6 +36,36 @@ function todayStr() {
 function money(n) {
   n = Number(n) || 0;
   return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/* Migrate legacy { sales, cost, profit } entries to { sales, platformFee, productCost, profit }.
+   Legacy "cost" is treated as product cost with platform fee 0, so totals and profit stay unchanged. */
+function normalizeDay(day) {
+  const out = {};
+  CHANNELS.forEach(c => {
+    const v = (day && day[c.key]) || {};
+    if (v.platformFee !== undefined || v.productCost !== undefined) {
+      out[c.key] = {
+        sales: v.sales ?? '',
+        platformFee: v.platformFee ?? '',
+        productCost: v.productCost ?? '',
+        profit: v.profit ?? '',
+      };
+    } else {
+      out[c.key] = {
+        sales: v.sales ?? '',
+        platformFee: '',
+        productCost: v.cost ?? '',
+        profit: v.profit ?? '',
+      };
+    }
+  });
+  return out;
+}
+function normalizeRecords(recs) {
+  const out = {};
+  Object.keys(recs || {}).forEach(d => { out[d] = normalizeDay(recs[d]); });
+  return out;
 }
 
 /* ---------------- GitHub sync ---------------- */
@@ -71,7 +101,7 @@ async function ghFetchRecords() {
     saveJSON(LS_SHA, fileSha);
     const jsonStr = b64DecodeUnicode(data.content.replace(/\n/g, ''));
     const parsed = JSON.parse(jsonStr);
-    records = parsed.records || {};
+    records = normalizeRecords(parsed.records || {});
     saveJSON(LS_RECORDS, records);
     setSyncDot('ok');
     return { ok: true };
@@ -172,7 +202,7 @@ async function syncAllPending() {
 
 function emptyDay() {
   const day = {};
-  CHANNELS.forEach(c => { day[c.key] = { sales: '', cost: '', profit: '' }; });
+  CHANNELS.forEach(c => { day[c.key] = { sales: '', platformFee: '', productCost: '', profit: '' }; });
   return day;
 }
 
@@ -182,14 +212,15 @@ function renderEntryView() {
   const container = document.getElementById('channelCards');
   container.innerHTML = '';
   CHANNELS.forEach(c => {
-    const v = day[c.key] || { sales: '', cost: '', profit: '' };
+    const v = day[c.key] || { sales: '', platformFee: '', productCost: '', profit: '' };
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
       <h2>${c.label} <span class="subtotal" data-role="chsub-${c.key}">RM 0.00</span></h2>
       <div class="field-row">
         <div class="field"><label>Sales</label><input type="number" inputmode="decimal" step="0.01" data-ch="${c.key}" data-f="sales" value="${v.sales}"></div>
-        <div class="field"><label>Cost</label><input type="number" inputmode="decimal" step="0.01" data-ch="${c.key}" data-f="cost" value="${v.cost}"></div>
+        <div class="field"><label>Platform Fee</label><input type="number" inputmode="decimal" step="0.01" data-ch="${c.key}" data-f="platformFee" value="${v.platformFee}"></div>
+        <div class="field"><label>Product Cost</label><input type="number" inputmode="decimal" step="0.01" data-ch="${c.key}" data-f="productCost" value="${v.productCost}"></div>
         <div class="field"><label>Profit</label><input type="number" inputmode="decimal" step="0.01" data-ch="${c.key}" data-f="profit" value="${v.profit}"></div>
       </div>`;
     container.appendChild(card);
@@ -202,15 +233,17 @@ function renderEntryView() {
 
 function onFieldInput(e) {
   const ch = e.target.dataset.ch, f = e.target.dataset.f;
-  // auto-suggest profit = sales - cost, only if the user hasn't typed a profit value yet
-  if (f === 'sales' || f === 'cost') {
+  // auto-suggest profit = sales - platformFee - productCost, only if the user hasn't typed a profit value yet
+  if (f === 'sales' || f === 'platformFee' || f === 'productCost') {
     const salesInp = document.querySelector(`input[data-ch="${ch}"][data-f="sales"]`);
-    const costInp  = document.querySelector(`input[data-ch="${ch}"][data-f="cost"]`);
+    const feeInp   = document.querySelector(`input[data-ch="${ch}"][data-f="platformFee"]`);
+    const costInp  = document.querySelector(`input[data-ch="${ch}"][data-f="productCost"]`);
     const profitInp = document.querySelector(`input[data-ch="${ch}"][data-f="profit"]`);
     if (profitInp.dataset.touched !== '1') {
       const s = parseFloat(salesInp.value) || 0;
+      const fee = parseFloat(feeInp.value) || 0;
       const c = parseFloat(costInp.value) || 0;
-      profitInp.value = (s - c).toFixed(2);
+      profitInp.value = (s - fee - c).toFixed(2);
     }
   }
   if (f === 'profit') e.target.dataset.touched = '1';
@@ -218,16 +251,18 @@ function onFieldInput(e) {
 }
 
 function updateDayTotals() {
-  let totSales = 0, totCost = 0, totProfit = 0;
+  let totSales = 0, totFee = 0, totCost = 0, totProfit = 0;
   CHANNELS.forEach(c => {
     const s = parseFloat(document.querySelector(`input[data-ch="${c.key}"][data-f="sales"]`)?.value) || 0;
-    const co = parseFloat(document.querySelector(`input[data-ch="${c.key}"][data-f="cost"]`)?.value) || 0;
+    const fee = parseFloat(document.querySelector(`input[data-ch="${c.key}"][data-f="platformFee"]`)?.value) || 0;
+    const co = parseFloat(document.querySelector(`input[data-ch="${c.key}"][data-f="productCost"]`)?.value) || 0;
     const p = parseFloat(document.querySelector(`input[data-ch="${c.key}"][data-f="profit"]`)?.value) || 0;
-    totSales += s; totCost += co; totProfit += p;
+    totSales += s; totFee += fee; totCost += co; totProfit += p;
     const subEl = document.querySelector(`[data-role="chsub-${c.key}"]`);
     if (subEl) subEl.textContent = `RM ${money(s)}`;
   });
   document.getElementById('totSales').textContent = `RM ${money(totSales)}`;
+  document.getElementById('totFee').textContent = `RM ${money(totFee)}`;
   document.getElementById('totCost').textContent = `RM ${money(totCost)}`;
   document.getElementById('totProfit').textContent = `RM ${money(totProfit)}`;
 }
@@ -236,9 +271,10 @@ function collectDayFromForm() {
   const day = {};
   CHANNELS.forEach(c => {
     day[c.key] = {
-      sales:  document.querySelector(`input[data-ch="${c.key}"][data-f="sales"]`).value || '0',
-      cost:   document.querySelector(`input[data-ch="${c.key}"][data-f="cost"]`).value || '0',
-      profit: document.querySelector(`input[data-ch="${c.key}"][data-f="profit"]`).value || '0',
+      sales:       document.querySelector(`input[data-ch="${c.key}"][data-f="sales"]`).value || '0',
+      platformFee: document.querySelector(`input[data-ch="${c.key}"][data-f="platformFee"]`).value || '0',
+      productCost: document.querySelector(`input[data-ch="${c.key}"][data-f="productCost"]`).value || '0',
+      profit:      document.querySelector(`input[data-ch="${c.key}"][data-f="profit"]`).value || '0',
     };
   });
   return day;
@@ -327,28 +363,29 @@ function renderMonthlyView() {
   document.getElementById('monthLabel').textContent = monthLabel(currentMonth);
   const dates = Object.keys(records).filter(d => d.startsWith(currentMonth));
   const totals = {};
-  CHANNELS.forEach(c => totals[c.key] = { sales: 0, cost: 0, profit: 0 });
-  let grand = { sales: 0, cost: 0, profit: 0 };
+  CHANNELS.forEach(c => totals[c.key] = { sales: 0, platformFee: 0, productCost: 0, profit: 0 });
+  let grand = { sales: 0, platformFee: 0, productCost: 0, profit: 0 };
   dates.forEach(d => {
     const day = records[d];
     CHANNELS.forEach(c => {
       const v = day[c.key] || {};
-      const s = parseFloat(v.sales) || 0, co = parseFloat(v.cost) || 0, p = parseFloat(v.profit) || 0;
-      totals[c.key].sales += s; totals[c.key].cost += co; totals[c.key].profit += p;
-      grand.sales += s; grand.cost += co; grand.profit += p;
+      const s = parseFloat(v.sales) || 0, fee = parseFloat(v.platformFee) || 0, co = parseFloat(v.productCost) || 0, p = parseFloat(v.profit) || 0;
+      totals[c.key].sales += s; totals[c.key].platformFee += fee; totals[c.key].productCost += co; totals[c.key].profit += p;
+      grand.sales += s; grand.platformFee += fee; grand.productCost += co; grand.profit += p;
     });
   });
   const tbody = document.getElementById('monthTableBody');
   tbody.innerHTML = '';
   CHANNELS.forEach(c => {
     const t = totals[c.key];
-    if (t.sales === 0 && t.cost === 0 && t.profit === 0) return;
+    if (t.sales === 0 && t.platformFee === 0 && t.productCost === 0 && t.profit === 0) return;
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${c.label}</td><td>${money(t.sales)}</td><td>${money(t.cost)}</td><td>${money(t.profit)}</td>`;
+    tr.innerHTML = `<td>${c.label}</td><td>${money(t.sales)}</td><td>${money(t.platformFee)}</td><td>${money(t.productCost)}</td><td>${money(t.profit)}</td>`;
     tbody.appendChild(tr);
   });
   document.getElementById('monthFootSales').textContent = money(grand.sales);
-  document.getElementById('monthFootCost').textContent = money(grand.cost);
+  document.getElementById('monthFootFee').textContent = money(grand.platformFee);
+  document.getElementById('monthFootCost').textContent = money(grand.productCost);
   document.getElementById('monthFootProfit').textContent = money(grand.profit);
   document.getElementById('monthDaysCount').textContent = `${dates.length} day(s) recorded`;
 }
