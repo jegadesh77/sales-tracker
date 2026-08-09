@@ -1,0 +1,14 @@
+{
+  "name": "Sales Tracker",
+  "short_name": "Sales",
+  "description": "Daily sales, cost and profit tracker across all sales channels",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0iIzBmMTcyYSIvPgogIDxyZWN0IHg9IjYyIiB5PSI2MiIgd2lkdGg9IjM4OCIgaGVpZ2h0PSIzODgiIHJ4PSI5NiIgZmlsbD0iIzFlMjkzYiIgc3Ryb2tlPSIjMzhiZGY4IiBzdHJva2Utd2lkdGg9IjEwIi8+CiAgPHJlY3QgeD0iMTUwIiB5PSIzMDAiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMTAiIHJ4PSIxMCIgZmlsbD0iIzM4YmRmOCIvPgogIDxyZWN0IHg9IjIyMCIgeT0iMjMwIiB3aWR0aD0iNDYiIGhlaWdodD0iMTgwIiByeD0iMTAiIGZpbGw9IiM0YWRlODAiLz4KICA8cmVjdCB4PSIyOTAiIHk9IjE3MCIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjI0MCIgcng9IjEwIiBmaWxsPSIjZmFjYzE1Ii8+CiAgPHJlY3QgeD0iMzYwIiB5PSIyNjAiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxNTAiIHJ4PSIxMCIgZmlsbD0iIzM4YmRmOCIvPgo8L3N2Zz4K", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
