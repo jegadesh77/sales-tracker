@@ -88,8 +88,12 @@ main { padding: 12px 16px 24px; max-width: 640px; margin: 0 auto; }
 
 .field-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 6px;
+}
+
+@media (min-width: 420px) {
+  .field-row { grid-template-columns: 1fr 1fr 1fr 1fr; }
 }
 
 .field {
@@ -142,8 +146,14 @@ input:focus, select:focus { outline: 2px solid var(--accent); }
   margin-bottom: 14px;
   color: white;
 }
-.day-total .rows { display: flex; justify-content: space-between; margin-top: 8px; font-size: 14px;}
-.day-total .rows b { font-size: 20px; display:block; }
+.day-total .rows {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 8px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+.day-total .rows b { font-size: 18px; display:block; }
 .day-total .label { opacity: .85; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; }
 
 button.primary {
@@ -208,10 +218,16 @@ nav.tabbar button {
 nav.tabbar button .ic { font-size: 20px; }
 nav.tabbar button.active { color: var(--accent); }
 
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 table.summary {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  min-width: 420px;
 }
 table.summary th, table.summary td {
   text-align: right;
