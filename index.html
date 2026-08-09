@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sales Tracker</title>
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0iIzBmMTcyYSIvPgogIDxyZWN0IHg9IjYyIiB5PSI2MiIgd2lkdGg9IjM4OCIgaGVpZ2h0PSIzODgiIHJ4PSI5NiIgZmlsbD0iIzFlMjkzYiIgc3Ryb2tlPSIjMzhiZGY4IiBzdHJva2Utd2lkdGg9IjEwIi8+CiAgPHJlY3QgeD0iMTUwIiB5PSIzMDAiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMTAiIHJ4PSIxMCIgZmlsbD0iIzM4YmRmOCIvPgogIDxyZWN0IHg9IjIyMCIgeT0iMjMwIiB3aWR0aD0iNDYiIGhlaWdodD0iMTgwIiByeD0iMTAiIGZpbGw9IiM0YWRlODAiLz4KICA8cmVjdCB4PSIyOTAiIHk9IjE3MCIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjI0MCIgcng9IjEwIiBmaWxsPSIjZmFjYzE1Ii8+CiAgPHJlY3QgeD0iMzYwIiB5PSIyNjAiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxNTAiIHJ4PSIxMCIgZmlsbD0iIzM4YmRmOCIvPgo8L3N2Zz4K">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjExMiIgZmlsbD0iIzBmMTcyYSIvPgogIDxyZWN0IHg9IjYyIiB5PSI2MiIgd2lkdGg9IjM4OCIgaGVpZ2h0PSIzODgiIHJ4PSI5NiIgZmlsbD0iIzFlMjkzYiIgc3Ryb2tlPSIjMzhiZGY4IiBzdHJva2Utd2lkdGg9IjEwIi8+CiAgPHJlY3QgeD0iMTUwIiB5PSIzMDAiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxMTAiIHJ4PSIxMCIgZmlsbD0iIzM4YmRmOCIvPgogIDxyZWN0IHg9IjIyMCIgeT0iMjMwIiB3aWR0aD0iNDYiIGhlaWdodD0iMTgwIiByeD0iMTAiIGZpbGw9IiM0YWRlODAiLz4KICA8cmVjdCB4PSIyOTAiIHk9IjE3MCIgd2lkdGg9IjQ2IiBoZWlnaHQ9IjI0MCIgcng9IjEwIiBmaWxsPSIjZmFjYzE1Ii8+CiAgPHJlY3QgeD0iMzYwIiB5PSIyNjAiIHdpZHRoPSI0NiIgaGVpZ2h0PSIxNTAiIHJ4PSIxMCIgZmlsbD0iIzM4YmRmOCIvPgo8L3N2Zz4K">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Sales Tracker</h1>
+  <div class="sync-dot" id="syncDot" title="GitHub sync status"></div>
+</header>
+
+<main>
+
+  <!-- ENTRY VIEW -->
+  <section class="view active" id="view-entry">
+    <div class="date-picker">
+      <input type="date" id="entryDate">
+    </div>
+
+    <div class="day-total">
+      <div class="label">Today's totals</div>
+      <div class="rows">
+        <div><span class="label">Sales</span><b id="totSales">RM 0.00</b></div>
+        <div><span class="label">Cost</span><b id="totCost">RM 0.00</b></div>
+        <div><span class="label">Profit</span><b id="totProfit">RM 0.00</b></div>
+      </div>
+    </div>
+
+    <div id="channelCards"></div>
+
+    <button class="primary" id="saveBtn">Save entry</button>
+    <div class="status-msg" id="entryStatus"></div>
+  </section>
+
+  <!-- HISTORY VIEW -->
+  <section class="view" id="view-history">
+    <div class="card">
+      <h2>Daily history</h2>
+      <div id="historyList"></div>
+    </div>
+  </section>
+
+  <!-- MONTHLY VIEW -->
+  <section class="view" id="view-monthly">
+    <div class="card">
+      <div class="month-nav">
+        <button id="prevMonth">‹</button>
+        <div class="label" id="monthLabel">—</div>
+        <button id="nextMonth">›</button>
+      </div>
+      <div class="hint" id="monthDaysCount"></div>
+      <table class="summary">
+        <thead><tr><th>Channel</th><th>Sales</th><th>Cost</th><th>Profit</th></tr></thead>
+        <tbody id="monthTableBody"></tbody>
+        <tfoot>
+          <tr>
+            <td>Total</td>
+            <td id="monthFootSales">0.00</td>
+            <td id="monthFootCost">0.00</td>
+            <td id="monthFootProfit">0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </section>
+
+  <!-- SETTINGS VIEW -->
+  <section class="view" id="view-settings">
+    <div class="card">
+      <h2>GitHub sync</h2>
+      <p class="hint">
+        Data is saved as <code>data/records.json</code> in a private GitHub repo, one commit per save.
+        Create a repo (e.g. <code>sales-data</code>), keep it <b>private</b>, then generate a
+        <a href="https://github.com/settings/tokens?type=beta" target="_blank" rel="noopener">fine-grained personal access token</a>
+        scoped to just that repo with read/write access to "Contents". Paste it below — it's stored only on this phone.
+      </p>
+      <div class="field"><label>GitHub username / org</label><input type="text" id="setOwner" placeholder="e.g. jegadesh"></div>
+      <div class="field" style="margin-top:8px;"><label>Repo name</label><input type="text" id="setRepo" placeholder="e.g. sales-data"></div>
+      <div class="field" style="margin-top:8px;"><label>Branch</label><input type="text" id="setBranch" placeholder="main"></div>
+      <div class="field" style="margin-top:8px;"><label>File path</label><input type="text" id="setPath" placeholder="data/records.json"></div>
+      <div class="field" style="margin-top:8px;"><label>Personal access token</label><input type="password" id="setToken" placeholder="github_pat_..."></div>
+      <button class="primary" id="saveSettingsBtn">Save &amp; test connection</button>
+      <button class="secondary" id="syncNowBtn">Sync now</button>
+      <div class="status-msg" id="settingsStatus"></div>
+    </div>
+  </section>
+
+</main>
+
+<nav class="tabbar">
+  <button id="tabEntry" class="active"><span class="ic">📝</span>Entry</button>
+  <button id="tabHistory"><span class="ic">📅</span>History</button>
+  <button id="tabMonthly"><span class="ic">📊</span>Monthly</button>
+  <button id="tabSettings"><span class="ic">⚙️</span>Settings</button>
+</nav>
+
+<script src="./app.js"></script>
+</body>
+</html>
